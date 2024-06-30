@@ -1,6 +1,4 @@
-let currentRound = 1;
-let player1Score = 0;
-let player2Score = 0;
+import { play, openGame, joinGame, resetGame } from './hive-service'
 
 function generatePlatforms(playerSide) {
     const side = document.getElementById(playerSide);
@@ -17,49 +15,92 @@ function jumpPlayer(player, score) {
     playerElement.style.bottom = `${score * 60}px`;
 }
 
-function playRound() {
-    const targetNumber = Math.floor(Math.random() * 100) + 1;
-    const guess1 = parseInt(document.getElementById('guess1').value);
-    const guess2 = parseInt(document.getElementById('guess2').value);
+let contractStatusCheckInterval;
 
-    document.getElementById('target').textContent = targetNumber;
+let player1Score = 0;
+let player2Score = 0;
 
-    const diff1 = Math.abs(targetNumber - guess1);
-    const diff2 = Math.abs(targetNumber - guess2);
+function enableContractStatusCheck() {
+    contractStatusCheckInterval = setInterval(() => {
+        const contractState = 5;
+        const round = 5;
+        // WIP ADD CONTRACT STATE CHECK HERE, BASICALLY GET THE CONTRACT STORAGE AND EXTRACT IMP INFO
+        // ALSO UPDATE PLAYERSCORES BELOW
+        // depending on if YOU ARE player1 or player2 go into state 3 or 4, will be different for both players
 
-    if (diff1 < diff2) {
-        player1Score++;
-        jumpPlayer('player1', player1Score);
-    } else if (diff2 < diff1) {
-        player2Score++;
-        jumpPlayer('player2', player2Score);
-    } else {
-        // In case of a tie, both players get a point
-        player1Score++;
-        player2Score++;
-        jumpPlayer('player1', player1Score);
-        jumpPlayer('player2', player2Score);
-    }
+        // state 0 = init
+        // state 1 = game created
+        // state 2 = no player played
+        // state 3 = player1 played
+        // state 4 = player2 played
 
-    currentRound++;
-    document.getElementById('round').textContent = currentRound;
+        // adjust UI based on contract state
+        if (contractState === 0) {
+            document.getElementById('guess').disabled = true;
+            document.getElementById('submit-guess').disabled = true;
+            document.getElementById('start-game').disabled = false;
+            document.getElementById('join-game').disabled = true;
+            document.getElementById('reset-game').disabled = true;
+            document.getElementById('round').textContent = "-";
+            document.getElementById('status').textContent = "Contract is ready";
+            player1Score = 0;
+            player2Score = 0;
+        } else if (contractState === 1) {
+            document.getElementById('guess').disabled = true;
+            document.getElementById('submit-guess').disabled = true;
+            document.getElementById('start-game').disabled = true;
+            document.getElementById('join-game').disabled = false;
+            document.getElementById('reset-game').disabled = false;
+            document.getElementById('round').textContent = "-";
+            document.getElementById('status').textContent = "Game created, waiting for player 2 to join";
+        } else if (contractState === 2) {
+            document.getElementById('guess').disabled = false;
+            document.getElementById('submit-guess').disabled = false;
+            document.getElementById('start-game').disabled = true;
+            document.getElementById('join-game').disabled = true;
+            document.getElementById('reset-game').disabled = false;
+            document.getElementById('round').textContent = round;
+            document.getElementById('status').textContent = "waiting for both players to play";
+        } else if (contractState === 3) {
+            document.getElementById('guess').disabled = false;
+            document.getElementById('submit-guess').disabled = false;
+            document.getElementById('start-game').disabled = true;
+            document.getElementById('join-game').disabled = true;
+            document.getElementById('reset-game').disabled = false;
+            document.getElementById('round').textContent = round;
+            document.getElementById('status').textContent = "waiting for player 2 to play";
+        } else if (contractState === 4) {
+            document.getElementById('guess').disabled = false;
+            document.getElementById('submit-guess').disabled = false;
+            document.getElementById('start-game').disabled = true;
+            document.getElementById('join-game').disabled = true;
+            document.getElementById('reset-game').disabled = false;
+            document.getElementById('round').textContent = round;
+            document.getElementById('status').textContent = "waiting for player 1 to play";
+        }
 
-    if (currentRound > 3) {
-        setTimeout(() => {
-            alert(`Game Over!\nPlayer 1: ${player1Score}\nPlayer 2: ${player2Score}`);
-            resetGame();
-        }, 1000);
-    }
+        // update visuals based on contract state
+        const fetchedPlayer1Score = 5;
+        const fetchedPlayer2Score = 5;
+        if (fetchedPlayer1Score !== player1Score) {
+            player1Score = fetchedPlayer1Score;
+            jumpPlayer('player1', player1Score);
+        }
+        if (fetchedPlayer2Score !== player2Score) {
+            player2Score = fetchedPlayer2Score;
+            jumpPlayer('player2', player2Score);
+        }
+
+    }, 10 * 1000);
 }
 
-function resetGame() {
-    currentRound = 1;
-    player1Score = 0;
-    player2Score = 0;
-    document.getElementById('round').textContent = currentRound;
-    document.getElementById('target').textContent = '?';
-    jumpPlayer('player1', 0);
-    jumpPlayer('player2', 0);
+function disableContractStatusCheck() {
+    clearInterval(contractStatusCheckInterval);
+}
+
+function playRound() {
+    const guess = parseInt(document.getElementById('guess').value);
+    play(guess)
 }
 
 // Initialize the game when the DOM is fully loaded
@@ -68,5 +109,10 @@ document.addEventListener('DOMContentLoaded', () => {
     generatePlatforms('player2-side');
 
     // Add event listener to the submit button
-    document.getElementById('submit-guesses').addEventListener('click', playRound);
+    document.getElementById('submit-guess').addEventListener('click', playRound);
+    document.getElementById('start-game').addEventListener('click', openGame);
+    document.getElementById('join-game').addEventListener('click', joinGame);
+    document.getElementById('reset-game').addEventListener('click', resetGame);
+    document.getElementById('enable-contract-status-check').addEventListener('click', enableContractStatusCheck);
+    document.getElementById('disable-contract-status-check').addEventListener('click', disableContractStatusCheck);
 });

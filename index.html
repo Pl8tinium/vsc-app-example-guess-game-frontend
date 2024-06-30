@@ -16,13 +16,19 @@
         </div>
     </div>
     <div id="game-info">
-        <p>Round: <span id="round">1</span>/3</p>
-        <p>Target: <span id="target">?</span></p>
+        <p>Round: <span id="round">Not initted</span>/3</p>
+        <p>Status: <span id="status">?</span></p>
     </div>
     <div id="input-container">
-        <input type="number" id="guess1" placeholder="Player 1 guess">
-        <input type="number" id="guess2" placeholder="Player 2 guess">
-        <button id="submit-guesses">Submit Guesses</button>
+        <input id="hive-account" placeholder="Hive account name">
+        <input id="hive-account-posting" placeholder="Hive account posting private">
+        <input type="number" id="guess" placeholder="Player guess" disabled="true">
+        <button id="submit-guess" disabled="true">Submit Guess</button>
+        <button id="start-game" disabled="true">Start game</button>
+        <button id="join-game" disabled="true">Join game</button>
+        <button id="reset-game" disabled="true">Reset game</button>
+        <button id="enable-contract-status-check">Enable contract status check</button>
+        <button id="disable-contract-status-check">disable contract status check</button>
     </div>
 
     <script type="module" src="/main.js"></script>
