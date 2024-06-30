@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doodle Guess Game</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div id="game-container">
+        <div class="player-side" id="player1-side">
+            <div class="player" id="player1"></div>
+        </div>
+        <div class="player-side" id="player2-side">
+            <div class="player" id="player2"></div>
+        </div>
+    </div>
+    <div id="game-info">
+        <p>Round: <span id="round">1</span>/3</p>
+        <p>Target: <span id="target">?</span></p>
+    </div>
+    <div id="input-container">
+        <input type="number" id="guess1" placeholder="Player 1 guess">
+        <input type="number" id="guess2" placeholder="Player 2 guess">
+        <button id="submit-guesses">Submit Guesses</button>
+    </div>
+
+    <script type="module" src="/main.js"></script>
+</body>
+</html>
