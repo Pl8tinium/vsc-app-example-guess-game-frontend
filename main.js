@@ -12,9 +12,9 @@ function generatePlatforms(playerSide) {
     }
 }
 
-function jumpPlayer(player, height) {
+function jumpPlayer(player, score) {
     const playerElement = document.getElementById(player);
-    playerElement.style.bottom = `${height}px`;
+    playerElement.style.bottom = `${score * 60}px`;
 }
 
 function playRound() {
@@ -29,13 +29,16 @@ function playRound() {
 
     if (diff1 < diff2) {
         player1Score++;
-        jumpPlayer('player1', currentRound * 60);
+        jumpPlayer('player1', player1Score);
     } else if (diff2 < diff1) {
         player2Score++;
-        jumpPlayer('player2', currentRound * 60);
+        jumpPlayer('player2', player2Score);
     } else {
-        jumpPlayer('player1', currentRound * 60);
-        jumpPlayer('player2', currentRound * 60);
+        // In case of a tie, both players get a point
+        player1Score++;
+        player2Score++;
+        jumpPlayer('player1', player1Score);
+        jumpPlayer('player2', player2Score);
     }
 
     currentRound++;
