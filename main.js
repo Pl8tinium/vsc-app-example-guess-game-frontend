@@ -1,4 +1,5 @@
 import { play, openGame, joinGame, resetGame } from './hive-service'
+import Axios from 'axios'
 
 function generatePlatforms(playerSide) {
     const side = document.getElementById(playerSide);
@@ -21,12 +22,20 @@ let player1Score = 0;
 let player2Score = 0;
 
 function enableContractStatusCheck() {
-    contractStatusCheckInterval = setInterval(() => {
+    contractStatusCheckInterval = setInterval(async () => {
         const contractState = 5;
         const round = 5;
         // WIP ADD CONTRACT STATE CHECK HERE, BASICALLY GET THE CONTRACT STORAGE AND EXTRACT IMP INFO
         // ALSO UPDATE PLAYERSCORES BELOW
         // depending on if YOU ARE player1 or player2 go into state 3 or 4, will be different for both players
+
+        const state = await getContractState('bafyreifp5lh32xtv6ask6on6k7jf7wmp2orwjick67lakslxlirhg4sbya')
+
+
+
+
+
+
 
         // state 0 = init
         // state 1 = game created
@@ -103,8 +112,27 @@ function playRound() {
     play(guess)
 }
 
+async function getContractState(lastOutputTx) {
+    const STATE_GQL = `
+        query MyQuery($outputId: String) {
+            contractState(id: $outputId) {
+                state
+            }
+        }
+    `
+
+    const { data } = await Axios.post(`http://192.168.0.213:1337/api/v1/graphql`, {
+        query: STATE_GQL,
+        variables: {
+            outputId: lastOutputTx,
+        },
+    })
+
+    return data.data.contractState.state
+}
+
 // Initialize the game when the DOM is fully loaded
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     generatePlatforms('player1-side');
     generatePlatforms('player2-side');
 
