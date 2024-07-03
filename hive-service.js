@@ -3,8 +3,8 @@ import { vClient, vTransaction } from '@vsc.eco/client'
 import { DID } from "dids";
 import { Ed25519Provider } from "key-did-provider-ed25519";
 import KeyResolver from 'key-did-resolver'
+import { CONTRACT_ID } from './main'
 
-const contractId = 'vs41q9c3yg9u784wm4m2rwtd8dejynw7u3t0fnehv03yxdqqe9m9n7tcw538scemlayn'
 const useVSCTx = true
 
 async function sendHiveTx(hiveAccount, hiveAccountPosting, action, payload) {
@@ -20,7 +20,7 @@ async function sendHiveTx(hiveAccount, hiveAccountPosting, action, payload) {
             tx: {
                 op: 'call_contract',
                 action: action,
-                contract_id: contractId,
+                contract_id: CONTRACT_ID,
                 payload: payload
             }
         })
@@ -43,7 +43,7 @@ async function sendVSCTx(didSecret, action, payload) {
     tx.setTx({
         op: 'call_contract',
         action: action,
-        contract_id: contractId,
+        contract_id: CONTRACT_ID,
         payload: payload
     })
     await tx.broadcast(client);

@@ -1,6 +1,8 @@
 import { play, openGame, joinGame, resetGame } from './hive-service'
 import Axios from 'axios'
 
+export const CONTRACT_ID = 'vs41q9c3yg9u784wm4m2rwtd8dejynw7u3t0fnehv03yxdqqe9m9n7tcw538scemlayn'
+
 function generatePlatforms(playerSide) {
     const side = document.getElementById(playerSide);
     for (let i = 1; i <= 10; i++) {
@@ -21,30 +23,55 @@ let contractStatusCheckInterval;
 let player1Score = 0;
 let player2Score = 0;
 
+function getLastOutputTransaction() {
+    // CONTRACT_ID
+}
+
 function enableContractStatusCheck() {
     contractStatusCheckInterval = setInterval(async () => {
-        const contractState = 5;
-        const round = 5;
+        let mode = 0;
+        let round = 0;
+        let fetchedPlayer1Score = 0;
+        let fetchedPlayer2Score = 0;
         // WIP ADD CONTRACT STATE CHECK HERE, BASICALLY GET THE CONTRACT STORAGE AND EXTRACT IMP INFO
-        // ALSO UPDATE PLAYERSCORES BELOW
         // depending on if YOU ARE player1 or player2 go into state 3 or 4, will be different for both players
 
-        const state = await getContractState('bafyreifp5lh32xtv6ask6on6k7jf7wmp2orwjick67lakslxlirhg4sbya')
+        const txId = getLastOutputTransaction()
+        const state = await getContractState(txId)
 
+        if (!("game_params" in state)) {
+            mode = 0
+        } else if (!("player2" in state["game_params"])) {
+            mode = 1
+        } else {
+            fetchedPlayer1Score = state["game_params"]["player1Score"]
+            fetchedPlayer2Score = state["game_params"]["player2Score"]
+            round = state["game_params"]["currentRound"]
 
+            if (state["game_params"]["player1Guess"] === 0 && state["game_params"]["player2Guess"] === 0) {
+                mode = 2
+            } else if (state["game_params"]["player1Guess"] !== 0) {
+                mode = 3
+            } else if (state["game_params"]["player2Guess"] !== 0) {
+                mode = 4
+            } else {
+                throw new Error("Invalid state")
+            }
+        }
 
+        if ("winner" in state) {
+            mode = 5
+        }
 
+        // mode 0 = init
+        // mode 1 = game created
+        // mode 2 = no player played
+        // mode 3 = player1 played
+        // mode 4 = player2 played
+        // mode 5 = game over
 
-
-
-        // state 0 = init
-        // state 1 = game created
-        // state 2 = no player played
-        // state 3 = player1 played
-        // state 4 = player2 played
-
-        // adjust UI based on contract state
-        if (contractState === 0) {
+        // adjust UI based on contract mode
+        if (mode === 0) {
             document.getElementById('guess').disabled = true;
             document.getElementById('submit-guess').disabled = true;
             document.getElementById('start-game').disabled = false;
@@ -54,7 +81,7 @@ function enableContractStatusCheck() {
             document.getElementById('status').textContent = "Contract is ready";
             player1Score = 0;
             player2Score = 0;
-        } else if (contractState === 1) {
+        } else if (mode === 1) {
             document.getElementById('guess').disabled = true;
             document.getElementById('submit-guess').disabled = true;
             document.getElementById('start-game').disabled = true;
@@ -62,7 +89,7 @@ function enableContractStatusCheck() {
             document.getElementById('reset-game').disabled = false;
             document.getElementById('round').textContent = "-";
             document.getElementById('status').textContent = "Game created, waiting for player 2 to join";
-        } else if (contractState === 2) {
+        } else if (mode === 2) {
             document.getElementById('guess').disabled = false;
             document.getElementById('submit-guess').disabled = false;
             document.getElementById('start-game').disabled = true;
@@ -70,7 +97,7 @@ function enableContractStatusCheck() {
             document.getElementById('reset-game').disabled = false;
             document.getElementById('round').textContent = round;
             document.getElementById('status').textContent = "waiting for both players to play";
-        } else if (contractState === 3) {
+        } else if (mode === 3) {
             document.getElementById('guess').disabled = false;
             document.getElementById('submit-guess').disabled = false;
             document.getElementById('start-game').disabled = true;
@@ -78,7 +105,7 @@ function enableContractStatusCheck() {
             document.getElementById('reset-game').disabled = false;
             document.getElementById('round').textContent = round;
             document.getElementById('status').textContent = "waiting for player 2 to play";
-        } else if (contractState === 4) {
+        } else if (mode === 4) {
             document.getElementById('guess').disabled = false;
             document.getElementById('submit-guess').disabled = false;
             document.getElementById('start-game').disabled = true;
@@ -86,11 +113,18 @@ function enableContractStatusCheck() {
             document.getElementById('reset-game').disabled = false;
             document.getElementById('round').textContent = round;
             document.getElementById('status').textContent = "waiting for player 1 to play";
+        } else if (mode === 5) {
+            document.getElementById('guess').disabled = true;
+            document.getElementById('submit-guess').disabled = true;
+            document.getElementById('start-game').disabled = true;
+            document.getElementById('join-game').disabled = true;
+            document.getElementById('reset-game').disabled = false;
+            document.getElementById('round').textContent = round;
+            document.getElementById('status').textContent = "Winner: " + state["winner"];
         }
 
-        // update visuals based on contract state
-        const fetchedPlayer1Score = 5;
-        const fetchedPlayer2Score = 5;
+        // update visuals based on contract mode
+
         if (fetchedPlayer1Score !== player1Score) {
             player1Score = fetchedPlayer1Score;
             jumpPlayer('player1', player1Score);
