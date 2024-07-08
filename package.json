@@ -16,8 +16,10 @@
     "vite": "^5.3.2"
   },
   "dependencies": {
-    "@vsc.eco/client": "^0.0.4",
+    "@vsc.eco/client": "^0.0.5",
     "axios": "^1.7.2",
-    "kubo-rpc-client": "^4.1.1"
+    "buffer-lite": "^2.1.0",
+    "kubo-rpc-client": "^4.1.1",
+    "rollup-plugin-node-globals": "^1.4.0"
   }
 }

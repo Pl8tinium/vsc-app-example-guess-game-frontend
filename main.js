@@ -1,7 +1,14 @@
 import { play, openGame, joinGame, resetGame } from './hive-service'
 import Axios from 'axios'
 
-export const CONTRACT_ID = 'vs41q9c3yg9u784wm4m2rwtd8dejynw7u3t0fnehv03yxdqqe9m9n7tcw538scemlayn'
+(function() {
+    if (typeof global === 'undefined') {
+        window.global = window;
+    }
+})();
+
+export const CONTRACT_ID = 'vs41q9c3ygzdfnmyasklad7xlfkh66mce85gn2az0danqn43umchgau4lm6yxgmyam2w'
+export const VSC_API = '192.168.0.213:1337'
 
 function generatePlatforms(playerSide) {
     const side = document.getElementById(playerSide);
@@ -23,8 +30,28 @@ let contractStatusCheckInterval;
 let player1Score = 0;
 let player2Score = 0;
 
-function getLastOutputTransaction() {
-    // CONTRACT_ID
+async function getLastOutputTransaction(contractId) {
+    const STATE_GQL = `
+        query MyQuery($contractId: String) {
+            findContractOutput(filterOptions: {
+                byContract: $contractId
+                limit: 1
+            }) {
+                outputs {
+                id
+                }
+            }
+        }
+    `
+
+    const { data } = await Axios.post(`http://${VSC_API}/api/v1/graphql`, {
+        query: STATE_GQL,
+        variables: {
+            contractId: contractId,
+        },
+    })
+
+    return data.data.findContractOutput.outputs[0].id
 }
 
 function enableContractStatusCheck() {
@@ -36,7 +63,7 @@ function enableContractStatusCheck() {
         // WIP ADD CONTRACT STATE CHECK HERE, BASICALLY GET THE CONTRACT STORAGE AND EXTRACT IMP INFO
         // depending on if YOU ARE player1 or player2 go into state 3 or 4, will be different for both players
 
-        const txId = getLastOutputTransaction()
+        const txId = await getLastOutputTransaction()
         const state = await getContractState(txId)
 
         if (!("game_params" in state)) {
@@ -155,7 +182,7 @@ async function getContractState(lastOutputTx) {
         }
     `
 
-    const { data } = await Axios.post(`http://192.168.0.213:1337/api/v1/graphql`, {
+    const { data } = await Axios.post(`http://${VSC_API}/api/v1/graphql`, {
         query: STATE_GQL,
         variables: {
             outputId: lastOutputTx,

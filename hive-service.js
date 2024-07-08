@@ -3,7 +3,10 @@ import { vClient, vTransaction } from '@vsc.eco/client'
 import { DID } from "dids";
 import { Ed25519Provider } from "key-did-provider-ed25519";
 import KeyResolver from 'key-did-resolver'
-import { CONTRACT_ID } from './main'
+import { CONTRACT_ID, VSC_API } from './main'
+
+import { Buffer } from 'buffer-lite';
+window.Buffer = Buffer;  // Set it as the global Buffer object for browser environments
 
 const useVSCTx = true
 
@@ -30,7 +33,7 @@ async function sendHiveTx(hiveAccount, hiveAccountPosting, action, payload) {
 
 async function sendVSCTx(didSecret, action, payload) {
     const client = new vClient({
-        api: 'http://192.168.0.213:1337',
+        api: `http://${VSC_API}`,
         loginType: 'offchain'
     })
     const secret = Buffer.from(didSecret, 'hex')
@@ -46,6 +49,7 @@ async function sendVSCTx(didSecret, action, payload) {
         contract_id: CONTRACT_ID,
         payload: payload
     })
+    console.log(tx)
     await tx.broadcast(client);
 }
 
@@ -65,12 +69,12 @@ async function checkForReply(txId) {
 }
 
 export async function openGame() {
-    const txId = await sendTx('openGame', "")
+    const txId = await sendTx('openGame', {})
     await checkForReply(txId)
 }
 
 export async function joinGame() {
-    const txId = await sendTx('joinGame', "")
+    const txId = await sendTx('joinGame', {})
     await checkForReply(txId)
 }
 
@@ -80,6 +84,6 @@ export async function play(guess) {
 }
 
 export async function resetGame() {
-    const txId = await sendTx('resetGame', "")
+    const txId = await sendTx('resetGame', {})
     await checkForReply(txId)
 }
