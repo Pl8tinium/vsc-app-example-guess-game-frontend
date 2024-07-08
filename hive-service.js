@@ -1,5 +1,5 @@
 import { Client, PrivateKey } from '@hiveio/dhive'
-import { vClient, vTransaction } from '@vsc.eco/client'
+import { vClient, vTransaction } from './client/index'
 import { DID } from "dids";
 import { Ed25519Provider } from "key-did-provider-ed25519";
 import KeyResolver from 'key-did-resolver'
