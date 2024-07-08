@@ -1,11 +1,11 @@
 import { play, openGame, joinGame, resetGame } from './hive-service'
 import Axios from 'axios'
 
-(function() {
-    if (typeof global === 'undefined') {
-        window.global = window;
-    }
-})();
+// (function() {
+//     if (typeof global === 'undefined') {
+//         window.global = window;
+//     }
+// })();
 
 export const CONTRACT_ID = 'vs41q9c3ygzdfnmyasklad7xlfkh66mce85gn2az0danqn43umchgau4lm6yxgmyam2w'
 export const VSC_API = '192.168.0.213:1337'

@@ -5,8 +5,8 @@ import { Ed25519Provider } from "key-did-provider-ed25519";
 import KeyResolver from 'key-did-resolver'
 import { CONTRACT_ID, VSC_API } from './main'
 
-import { Buffer } from 'buffer-lite';
-window.Buffer = Buffer;  // Set it as the global Buffer object for browser environments
+// import { Buffer } from 'buffer-lite';
+// window.Buffer = Buffer;  // Set it as the global Buffer object for browser environments
 
 const useVSCTx = true
 
