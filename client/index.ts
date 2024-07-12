@@ -6,7 +6,7 @@ import Axios from "axios";
 import Ajv from 'ajv'
 import { submitTxQuery } from "./queries";
 import { TransactionContainerV2, TransactionDbType, TxSchema } from "./types";
-import { convertEIP712Type, getNonce } from "./utils";
+import { convertEIP712Type, getNonce, hexToUint8Array } from "./utils";
 import Web3, { Web3BaseWalletAccount } from "web3";
 import {hashTypedData, recoverTypedDataAddress, recoverAddress} from 'viem'
 import { encode, decode } from '@ipld/dag-cbor'
@@ -69,6 +69,36 @@ interface callContractTx {
 
 type TransactionDataCommon = callContractTx 
 
+
+function base64UrlToBase64(base64url) {
+  return base64url.replace(/-/g, '+').replace(/_/g, '/');
+}
+
+// Function to decode a base64 string to Uint8Array
+function base64ToUint8Array(base64) {
+  const binaryString = atob(base64);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+}
+
+// Combining the functions to decode a base64 URL-safe string to Uint8Array
+export function base64UrlToUint8Array(base64url) {
+  const base64 = base64UrlToBase64(base64url);
+  return base64ToUint8Array(base64);
+}
+
+export function uint8ArrayToBase64Url(uint8Array) {
+  // Convert Uint8Array to a binary string
+  const binaryString = String.fromCharCode.apply(null, uint8Array);
+  // Encode binary string to base64
+  const base64 = btoa(binaryString);
+  // Convert base64 to base64url by replacing characters
+  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
 
 
 export class vTransaction {
@@ -139,7 +169,10 @@ export class vTransaction {
       const jws = await client._did.createDagJWS(txData)
       
       //Convert JWS into separate sig & tx data
-      const protectedVal = JSON.parse(Buffer.from(jws.jws.signatures[0].protected,'base64url').toString())
+      const arr = base64UrlToUint8Array(jws.jws.signatures[0].protected)
+      const textDecoder = new TextDecoder();
+      const decodedString = textDecoder.decode(arr);
+      const protectedVal = JSON.parse(decodedString)
       const did = protectedVal.kid.split('#')[0]
      
       const sigs = [
@@ -150,12 +183,12 @@ export class vTransaction {
           sig: jws.jws.signatures[0].signature
         }
       ]
-      const sigEncoded = Buffer.from((await encodePayload({
+      const sigEncoded = uint8ArrayToBase64Url((await encodePayload({
         __t: 'vsc-sig',
         sigs
-      })).linkedBlock).toString('base64url')
-      const encodedTx = Buffer.from(jws.linkedBlock).toString('base64url');
+      })).linkedBlock)
 
+      const encodedTx = uint8ArrayToBase64Url(jws.linkedBlock);
       // const convertJws = await convertTxJws({
       //   sig: sigEncoded,
       //   tx: encodedTx
@@ -218,11 +251,11 @@ export class vTransaction {
         }
       ]
       console.log(txData, sigs)
-      const sigEncoded = Buffer.from((await encodePayload({
+      const sigEncoded = uint8ArrayToBase64Url((await encodePayload({
         __t: 'vsc-sig',
         sigs
-      })).linkedBlock).toString('base64url')
-      const txEncoded = Buffer.from((await encodePayload(txData)).linkedBlock).toString('base64url');
+      })).linkedBlock)
+      const txEncoded = uint8ArrayToBase64Url((await encodePayload(txData)).linkedBlock);
 
       const {data} = await Axios.post(`${client._args.api}/api/v1/graphql`, {
         query: submitTxQuery,
@@ -298,6 +331,8 @@ export class vClient {
       throw new Error('DID Not authenticated! Must run await did.authenticate()')
     }
     this._did = did;
+    this.loginInfo.id = did.id
+    this.loginInfo.type = 'offchain'
   }
 
   async loginWithHive(args: {

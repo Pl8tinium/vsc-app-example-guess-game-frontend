@@ -1,14 +1,13 @@
 import { play, openGame, joinGame, resetGame } from './hive-service'
 import Axios from 'axios'
 
-// (function() {
-//     if (typeof global === 'undefined') {
-//         window.global = window;
-//     }
-// })();
-
-export const CONTRACT_ID = 'vs41q9c3ygzdfnmyasklad7xlfkh66mce85gn2az0danqn43umchgau4lm6yxgmyam2w'
+export const DEFAULT_CONTRACT_ID = 'vs41q9c3ygzd6cy3amsxs2j9hwl7d8drh6puvd6c7eqhc907jmyrg48xh8kepgaaxtg4'
 export const VSC_API = '192.168.0.213:1337'
+// export const VSC_API = 'api.vsc.eco:443'
+
+export function getContractId() {
+    return document.getElementById('contract-id').value
+}
 
 function generatePlatforms(playerSide) {
     const side = document.getElementById(playerSide);
@@ -30,7 +29,7 @@ let contractStatusCheckInterval;
 let player1Score = 0;
 let player2Score = 0;
 
-async function getLastOutputTransaction(contractId) {
+async function getLastOutputTransaction() {
     const STATE_GQL = `
         query MyQuery($contractId: String) {
             findContractOutput(filterOptions: {
@@ -47,11 +46,11 @@ async function getLastOutputTransaction(contractId) {
     const { data } = await Axios.post(`http://${VSC_API}/api/v1/graphql`, {
         query: STATE_GQL,
         variables: {
-            contractId: contractId,
+            contractId: getContractId(),
         },
     })
 
-    return data.data.findContractOutput.outputs[0].id
+    return data.data.findContractOutput.outputs[0]?.id
 }
 
 function enableContractStatusCheck() {
@@ -60,35 +59,40 @@ function enableContractStatusCheck() {
         let round = 0;
         let fetchedPlayer1Score = 0;
         let fetchedPlayer2Score = 0;
-        // WIP ADD CONTRACT STATE CHECK HERE, BASICALLY GET THE CONTRACT STORAGE AND EXTRACT IMP INFO
-        // depending on if YOU ARE player1 or player2 go into state 3 or 4, will be different for both players
 
         const txId = await getLastOutputTransaction()
-        const state = await getContractState(txId)
+        let state = {}
 
-        if (!("game_params" in state)) {
-            mode = 0
-        } else if (!("player2" in state["game_params"])) {
-            mode = 1
-        } else {
-            fetchedPlayer1Score = state["game_params"]["player1Score"]
-            fetchedPlayer2Score = state["game_params"]["player2Score"]
-            round = state["game_params"]["currentRound"]
-
-            if (state["game_params"]["player1Guess"] === 0 && state["game_params"]["player2Guess"] === 0) {
-                mode = 2
-            } else if (state["game_params"]["player1Guess"] !== 0) {
-                mode = 3
-            } else if (state["game_params"]["player2Guess"] !== 0) {
-                mode = 4
+        if (txId) { 
+            state = await getContractState(txId)
+    
+            if (!("game_params" in state)) {
+                mode = 0
+            } else if (!("player2" in state["game_params"])) {
+                mode = 1
             } else {
-                throw new Error("Invalid state")
+                fetchedPlayer1Score = state["game_params"]["player1Score"]
+                fetchedPlayer2Score = state["game_params"]["player2Score"]
+                round = state["game_params"]["currentRound"]
+    
+                if (state["game_params"]["player1Guess"] === 0 && state["game_params"]["player2Guess"] === 0) {
+                    mode = 2
+                } else if (state["game_params"]["player1Guess"] !== 0) {
+                    mode = 3
+                } else if (state["game_params"]["player2Guess"] !== 0) {
+                    mode = 4
+                } else {
+                    throw new Error("Invalid state")
+                }
             }
+            
+            if ("winner" in state) {
+                mode = 5
+            }
+        } else {
+            mode = 0
         }
 
-        if ("winner" in state) {
-            mode = 5
-        }
 
         // mode 0 = init
         // mode 1 = game created
@@ -147,7 +151,7 @@ function enableContractStatusCheck() {
             document.getElementById('join-game').disabled = true;
             document.getElementById('reset-game').disabled = false;
             document.getElementById('round').textContent = round;
-            document.getElementById('status').textContent = "Winner: " + state["winner"];
+            document.getElementById('status').textContent = "Winner: " + state["winner"].winner;
         }
 
         // update visuals based on contract mode
@@ -171,6 +175,7 @@ function disableContractStatusCheck() {
 function playRound() {
     const guess = parseInt(document.getElementById('guess').value);
     play(guess)
+    document.getElementById('guess').value = ""
 }
 
 async function getContractState(lastOutputTx) {
@@ -204,4 +209,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('reset-game').addEventListener('click', resetGame);
     document.getElementById('enable-contract-status-check').addEventListener('click', enableContractStatusCheck);
     document.getElementById('disable-contract-status-check').addEventListener('click', disableContractStatusCheck);
+
+    // init default contract id
+    document.getElementById('contract-id').value = DEFAULT_CONTRACT_ID
 });

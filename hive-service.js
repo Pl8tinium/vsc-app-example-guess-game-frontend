@@ -1,12 +1,10 @@
 import { Client, PrivateKey } from '@hiveio/dhive'
 import { vClient, vTransaction } from './client/index'
+import { hexToUint8Array } from './client/utils'
 import { DID } from "dids";
 import { Ed25519Provider } from "key-did-provider-ed25519";
 import KeyResolver from 'key-did-resolver'
-import { CONTRACT_ID, VSC_API } from './main'
-
-// import { Buffer } from 'buffer-lite';
-// window.Buffer = Buffer;  // Set it as the global Buffer object for browser environments
+import { getContractId, VSC_API } from './main'
 
 const useVSCTx = true
 
@@ -23,7 +21,7 @@ async function sendHiveTx(hiveAccount, hiveAccountPosting, action, payload) {
             tx: {
                 op: 'call_contract',
                 action: action,
-                contract_id: CONTRACT_ID,
+                contract_id: getContractId(),
                 payload: payload
             }
         })
@@ -36,7 +34,7 @@ async function sendVSCTx(didSecret, action, payload) {
         api: `http://${VSC_API}`,
         loginType: 'offchain'
     })
-    const secret = Buffer.from(didSecret, 'hex')
+    const secret = hexToUint8Array(didSecret)
     const keyPrivate = new Ed25519Provider(secret)
     const did = new DID({ provider: keyPrivate, resolver: KeyResolver.getResolver() })
     await did.authenticate()
@@ -46,7 +44,7 @@ async function sendVSCTx(didSecret, action, payload) {
     tx.setTx({
         op: 'call_contract',
         action: action,
-        contract_id: CONTRACT_ID,
+        contract_id: getContractId(),
         payload: payload
     })
     console.log(tx)

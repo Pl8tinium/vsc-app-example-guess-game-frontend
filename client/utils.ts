@@ -1,13 +1,34 @@
 import Axios from 'axios'
 // import DagCbor from 'ipld-dag-cbor'
 import * as dagCBOR from '@ipld/dag-cbor';
+import { CID } from 'multiformats/cid';
+import { sha256 } from 'multiformats/hashes/sha2';
+import { base64UrlToUint8Array, uint8ArrayToBase64Url } from '.';
+
+async function createCID(obj) {
+  const bytes = dagCBOR.encode(obj);
+  const hash = await sha256.digest(bytes);
+  const cid = CID.create(1, dagCBOR.code, hash);
+  return cid;
+} 
+
+export function hexToUint8Array(hex) {
+  if (hex.length % 2 !== 0) {
+    throw new Error('Hex string must have an even length');
+  }
+  const array = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) {
+    array[i / 2] = parseInt(hex.substr(i, 2), 16);
+  }
+  return array;
+}
 
 export async function convertTxJws(args: {
     sig: string
     tx: string
   }) {
-    const tx = Buffer.from(args.tx, 'base64url')
-    const sigDecoded = DagCbor.util.deserialize(Buffer.from(args.sig, 'base64url')) as {
+    const tx = base64UrlToUint8Array(args.tx)
+    const sigDecoded = dagCBOR.decode(base64UrlToUint8Array(args.sig)) as {
         __t: 'vsc-sig',
         sigs: [
             {
@@ -18,19 +39,19 @@ export async function convertTxJws(args: {
         ]
     }
   
-    const cid = (await DagCbor.util.cid(tx))
+    const cid = (await createCID(tx))
 
     let jwsDagOutput = []
     for(const sigVal of sigDecoded.sigs) {
         jwsDagOutput.push({
             jws: {
-              payload: Buffer.from(cid.bytes).toString('base64url'),
+              payload: uint8ArrayToBase64Url(hexToUint8Array(cid.bytes)),
               signatures: [
                     {
-                        protected: Buffer.from(JSON.stringify({
+                        protected: uint8ArrayToBase64Url(hexToUint8Array(JSON.stringify({
                             alg: sigVal.alg,
                             kid: [sigVal.kid, sigVal.kid.split(':')[2]].join('#')
-                        })).toString('base64url'),
+                        }))),
                         signature: sigVal.sig
                     }
               ],
