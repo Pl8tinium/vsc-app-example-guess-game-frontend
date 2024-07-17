@@ -1,6 +1,5 @@
 import { Client, PrivateKey } from '@hiveio/dhive'
-import { vClient, vTransaction } from './client/index'
-import { hexToUint8Array } from './client/utils'
+import { vClient, vTransaction, hexToUint8Array } from '@vsc.eco/client'
 import { DID } from "dids";
 import { Ed25519Provider } from "key-did-provider-ed25519";
 import KeyResolver from 'key-did-resolver'

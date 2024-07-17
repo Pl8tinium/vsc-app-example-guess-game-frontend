@@ -26,6 +26,7 @@
   "dependencies": {
     "@hiveio/dhive": "^1.2.8",
     "@ipld/dag-cbor": "^9.2.1",
+    "@vsc.eco/client": "^0.0.7",
     "ajv": "^6.12.6",
     "axios": "^1.7.2",
     "bip65": "^1.0.3",
