@@ -3,12 +3,12 @@ import { vClient, vTransaction, hexToUint8Array } from '@vsc.eco/client'
 import { DID } from "dids";
 import { Ed25519Provider } from "key-did-provider-ed25519";
 import KeyResolver from 'key-did-resolver'
-import { getContractId, VSC_API } from './main'
+import { getContractId, VSC_API, useVscTx } from './main'
 
-const useVSCTx = true
+const HIVE_CLIENT = new Client('https://api.hive.blog')
 
 async function sendHiveTx(hiveAccount, hiveAccountPosting, action, payload) {
-    const broadcast = await Client.broadcast.json({
+    const broadcast = await HIVE_CLIENT.broadcast.json({
 
         required_auths: [],
         required_posting_auths: [hiveAccount],
@@ -30,7 +30,7 @@ async function sendHiveTx(hiveAccount, hiveAccountPosting, action, payload) {
 
 async function sendVSCTx(didSecret, action, payload) {
     const client = new vClient({
-        api: `http://${VSC_API}`,
+        api: VSC_API,
         loginType: 'offchain'
     })
     const secret = hexToUint8Array(didSecret)
@@ -51,7 +51,7 @@ async function sendVSCTx(didSecret, action, payload) {
 }
 
 async function sendTx(action, payload) {
-    if (useVSCTx) {
+    if (useVscTx) {
         const vscDid = document.getElementById('vsc-account-did').value;
         await sendVSCTx(vscDid, action, payload)
     } else {

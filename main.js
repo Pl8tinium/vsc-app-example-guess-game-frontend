@@ -1,9 +1,14 @@
-import { play, openGame, joinGame, resetGame } from './hive-service'
+import { play, openGame, joinGame, resetGame } from './tx-service'
 import Axios from 'axios'
 
-export const DEFAULT_CONTRACT_ID = 'vs41q9c3ygzd6cy3amsxs2j9hwl7d8drh6puvd6c7eqhc907jmyrg48xh8kepgaaxtg4'
-export const VSC_API = '192.168.0.213:1337'
-// export const VSC_API = 'api.vsc.eco:443'
+// the default contract id that is used for the game
+export const DEFAULT_CONTRACT_ID = '' //'vs41q9c3ygzd6cy3amsxs2j9hwl7d8drh6puvd6c7eqhc907jmyrg48xh8kepgaaxtg4'
+
+// VSC API endpoint that is used for injection of transactions
+export const VSC_API = 'https://api.vsc.eco:443'
+
+// Use VSC transactions by default
+export let useVscTx = true
 
 export function getContractId() {
     return document.getElementById('contract-id').value
@@ -43,7 +48,7 @@ async function getLastOutputTransaction() {
         }
     `
 
-    const { data } = await Axios.post(`http://${VSC_API}/api/v1/graphql`, {
+    const { data } = await Axios.post(`${VSC_API}/api/v1/graphql`, {
         query: STATE_GQL,
         variables: {
             contractId: getContractId(),
@@ -155,7 +160,6 @@ function enableContractStatusCheck() {
         }
 
         // update visuals based on contract mode
-
         if (fetchedPlayer1Score !== player1Score) {
             player1Score = fetchedPlayer1Score;
             jumpPlayer('player1', player1Score);
@@ -187,7 +191,7 @@ async function getContractState(lastOutputTx) {
         }
     `
 
-    const { data } = await Axios.post(`http://${VSC_API}/api/v1/graphql`, {
+    const { data } = await Axios.post(`${VSC_API}/api/v1/graphql`, {
         query: STATE_GQL,
         variables: {
             outputId: lastOutputTx,
@@ -197,19 +201,32 @@ async function getContractState(lastOutputTx) {
     return data.data.contractState.state
 }
 
+function toggleLogin() {
+    const loginType = document.getElementById('login-type').checked;
+    document.getElementById('hive-account').style.display = !loginType ? 'block' : 'none';
+    document.getElementById('hive-account-posting').style.display = !loginType ? 'block' : 'none';
+    document.getElementById('vsc-account-did').style.display = loginType ? 'block' : 'none';
+}
+
 // Initialize the game when the DOM is fully loaded
 document.addEventListener('DOMContentLoaded', async () => {
+    // generate platforms
     generatePlatforms('player1-side');
     generatePlatforms('player2-side');
-
-    // Add event listener to the submit button
+    
+    // attach event listeners
     document.getElementById('submit-guess').addEventListener('click', playRound);
     document.getElementById('start-game').addEventListener('click', openGame);
     document.getElementById('join-game').addEventListener('click', joinGame);
     document.getElementById('reset-game').addEventListener('click', resetGame);
     document.getElementById('enable-contract-status-check').addEventListener('click', enableContractStatusCheck);
     document.getElementById('disable-contract-status-check').addEventListener('click', disableContractStatusCheck);
-
+    
     // init default contract id
     document.getElementById('contract-id').value = DEFAULT_CONTRACT_ID
+    
+    // prepare the login type checkbox
+    document.getElementById('login-type').addEventListener('change', toggleLogin);
+    document.getElementById('login-type').checked = useVscTx;
+    toggleLogin();
 });
