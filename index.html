@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doodle Guess Game</title>
+  <script type="module" crossorigin src="/assets/index-pFsat_eH.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BSAw8cNt.css">
+</head>
+<body>
+    <div id="game-container">
+        <div class="player-side" id="player1-side">
+            <div class="player" id="player1"></div>
+        </div>
+        <div class="player-side" id="player2-side">
+            <div class="player" id="player2"></div>
+        </div>
+    </div>
+    <div id="game-info">
+        <p>Round: <span id="round">Not initted</span>/3</p>
+        <p>Status: <span id="status">?</span></p>
+    </div>
+    <div id="input-container">
+        <label>
+            <input type="checkbox" id="login-type">
+            VSC/ Hive Auth
+         </label>
+        <input id="hive-account" placeholder="Hive account name">
+        <input id="hive-account-posting" placeholder="Hive account posting private">
+        <input id="vsc-account-did" placeholder="VSC account DID private">
+        <input id="contract-id" placeholder="contract id">
+        <input type="number" id="guess" placeholder="Player guess" disabled="true">
+        <button id="submit-guess" disabled="true">Submit Guess</button>
+        <button id="start-game" disabled="true">Start game</button>
+        <button id="join-game" disabled="true">Join game</button>
+        <button id="reset-game" disabled="true">Reset game</button>
+        <button id="enable-contract-status-check">Enable contract status check</button>
+        <button id="disable-contract-status-check">disable contract status check</button>
+    </div>
+
+</body>
+</html>
